@@ -1,0 +1,43 @@
+﻿# Angular y Node
+**/node_modules/
+**/.angular
+**/dist/
+**/coverage/
+
+# Java y Maven
+**/target/
+**/build/
+*.class
+
+# Archivos temporales
+*.log
+logs/
+tmp/
+temp/
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+**/application-local.properties
+**/application-secrets.properties
+**/credentials.json
+**/secrets.json
+
+# Configuración local
+.idea/
+.vscode/
+*.iml
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Archivos temporales y copias
+*.swp
+*.swo
+*~
+*.bak
+*.old
+.github/modernize/

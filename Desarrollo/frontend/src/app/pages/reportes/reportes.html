@@ -1,0 +1,443 @@
+
+<div class="reportes-container">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <h1>Reportes financieros</h1>
+      <p>Administración y seguimiento de informes financieros corporativos.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="abrirFormulario()">
+      ＋ Crear reporte
+    </button>
+  </header>
+
+  <!-- MENSAJES -->
+  <div
+    *ngIf="mensaje"
+    class="alert-message"
+    [class.alert-success]="tipoMensaje === 'exito'"
+    [class.alert-error]="tipoMensaje === 'error'">
+    {{ mensaje }}
+  </div>
+
+  <!-- INDICADORES -->
+  <section class="stats-grid">
+
+    <article class="stat-card">
+      <div class="stat-icon blue">▨</div>
+      <div>
+        <span class="stat-label">Total de reportes</span>
+        <strong class="stat-value">{{ totalReportes }}</strong>
+        <small>Informes registrados</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon green">✓</div>
+      <div>
+        <span class="stat-label">Reportes generados</span>
+        <strong class="stat-value">{{ reportesGenerados }}</strong>
+        <small>Informes generados</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon orange">◷</div>
+      <div>
+        <span class="stat-label">Borradores</span>
+        <strong class="stat-value">{{ reportesBorrador }}</strong>
+        <small>Informes pendientes</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon purple">S/</div>
+      <div>
+        <span class="stat-label">Ingresos acumulados</span>
+        <strong class="stat-value amount-value">
+          {{ totalIngresos | number:'1.2-2' }}
+        </strong>
+        <small>Según los reportes registrados</small>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- PANEL DE REPORTES -->
+  <section class="reports-panel">
+
+    <div class="panel-header">
+      <div>
+        <h2>Listado de reportes</h2>
+        <p>Consulta y administra los informes financieros de las filiales.</p>
+      </div>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="listarReportes()">
+        ↻ Actualizar
+      </button>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-container">
+
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          [(ngModel)]="terminoBusqueda"
+          placeholder="Buscar por título, país o tipo...">
+      </div>
+
+      <select [(ngModel)]="filtroPais">
+        <option value="">Todos los países</option>
+        <option
+          *ngFor="let pais of reportes.map(r => r.pais).filter((p, i, a) => a.indexOf(p) === i)"
+          [value]="pais">
+          {{ pais }}
+        </option>
+      </select>
+
+      <select [(ngModel)]="filtroTipo">
+        <option value="">Todos los tipos</option>
+        <option value="FINANCIERO">Financiero</option>
+        <option value="CONSOLIDADO">Consolidado</option>
+        <option value="VENTAS">Ventas</option>
+        <option value="INVENTARIO">Inventario</option>
+      </select>
+
+      <select [(ngModel)]="filtroEstado">
+        <option value="">Todos los estados</option>
+        <option value="GENERADO">Generados</option>
+        <option value="BORRADOR">Borradores</option>
+      </select>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-container">
+
+      <table class="reports-table">
+
+        <thead>
+          <tr>
+            <th>REPORTE</th>
+            <th>TIPO</th>
+            <th>PAÍS</th>
+            <th>PERIODO</th>
+            <th>INGRESOS</th>
+            <th>UTILIDAD BRUTA</th>
+            <th>ESTADO</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngIf="cargando">
+            <td colspan="8" class="empty-table">
+              Cargando reportes...
+            </td>
+          </tr>
+
+          <tr *ngFor="let reporte of reportesFiltrados">
+
+            <td>
+              <div class="report-information">
+                <strong>{{ reporte.titulo }}</strong>
+                <small>
+                  {{ reporte.fechaGeneracion
+                    ? (reporte.fechaGeneracion | date:'dd/MM/yyyy')
+                    : 'Fecha no disponible' }}
+                </small>
+              </div>
+            </td>
+
+            <td>
+              <span class="type-label">
+                {{ reporte.tipo }}
+              </span>
+            </td>
+
+            <td>{{ reporte.pais }}</td>
+
+            <td>
+              <div class="period-information">
+                <span>{{ reporte.periodoInicio | date:'dd/MM/yyyy' }}</span>
+                <small>hasta</small>
+                <span>{{ reporte.periodoFin | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </td>
+
+            <td>
+              {{ reporte.moneda }} 
+              {{ reporte.ingresosTotales | number:'1.2-2' }}
+            </td>
+
+            <td>
+              <strong class="profit-value">
+                {{ reporte.moneda }}
+                {{ calcularUtilidad(reporte) | number:'1.2-2' }}
+              </strong>
+            </td>
+
+            <td>
+              <span
+                class="status-badge"
+                [class.status-generated]="reporte.estado === 'GENERADO'"
+                [class.status-draft]="reporte.estado === 'BORRADOR'">
+                {{ reporte.estado }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-buttons">
+
+                <button
+                  type="button"
+                  class="action-button edit-button"
+                  title="Editar reporte"
+                  (click)="editarReporte(reporte)">
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button delete-button"
+                  title="Eliminar reporte"
+                  (click)="eliminarReporte(reporte)">
+                  Eliminar
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="!cargando && reportesFiltrados.length === 0">
+            <td colspan="8" class="empty-table">
+              <div class="empty-state">
+                <span class="empty-icon">▨</span>
+                <strong>No se encontraron reportes</strong>
+                <p>Registra un nuevo reporte o modifica los filtros.</p>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div class="table-footer">
+      Mostrando {{ reportesFiltrados.length }} reportes
+    </div>
+
+  </section>
+
+  <!-- MODAL DE REGISTRO Y EDICIÓN -->
+  <div
+    class="modal-overlay"
+    *ngIf="mostrarFormulario"
+    (click)="cerrarFormulario()">
+
+    <section
+      class="modal-container"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <h2>
+            {{ modoEdicion ? 'Editar reporte financiero' : 'Crear reporte financiero' }}
+          </h2>
+          <p>Completa los datos generales y financieros del informe.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="cerrarFormulario()">
+          ×
+        </button>
+      </div>
+
+      <form (ngSubmit)="guardarReporte()">
+
+        <!-- DATOS GENERALES -->
+        <h3 class="form-section-title">Información general</h3>
+
+        <div class="form-group">
+          <label for="titulo">Título del reporte</label>
+          <input
+            id="titulo"
+            name="titulo"
+            type="text"
+            [(ngModel)]="formulario.titulo"
+            placeholder="Ej. Reporte financiero anual - Perú"
+            required>
+        </div>
+
+        <div class="form-row">
+
+          <div class="form-group">
+            <label for="tipo">Tipo de reporte</label>
+            <select
+              id="tipo"
+              name="tipo"
+              [(ngModel)]="formulario.tipo"
+              required>
+              <option value="FINANCIERO">Financiero</option>
+              <option value="CONSOLIDADO">Consolidado</option>
+              <option value="VENTAS">Ventas</option>
+              <option value="INVENTARIO">Inventario</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="pais">País de la filial</label>
+            <input
+              id="pais"
+              name="pais"
+              type="text"
+              [(ngModel)]="formulario.pais"
+              placeholder="Ej. Perú"
+              required>
+          </div>
+
+        </div>
+
+        <div class="form-row">
+
+          <div class="form-group">
+            <label for="periodoInicio">Fecha inicial</label>
+            <input
+              id="periodoInicio"
+              name="periodoInicio"
+              type="date"
+              [(ngModel)]="formulario.periodoInicio"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="periodoFin">Fecha final</label>
+            <input
+              id="periodoFin"
+              name="periodoFin"
+              type="date"
+              [(ngModel)]="formulario.periodoFin"
+              required>
+          </div>
+
+        </div>
+
+        <div class="form-group">
+          <label for="moneda">Moneda del reporte</label>
+          <select
+            id="moneda"
+            name="moneda"
+            [(ngModel)]="formulario.moneda">
+            <option value="PEN">Sol peruano (PEN)</option>
+            <option value="USD">Dólar estadounidense (USD)</option>
+            <option value="EUR">Euro (EUR)</option>
+          </select>
+        </div>
+
+        <!-- INFORMACIÓN FINANCIERA -->
+        <h3 class="form-section-title">Información financiera</h3>
+
+        <div class="form-row">
+
+          <div class="form-group">
+            <label for="ingresosTotales">Ingresos totales</label>
+            <input
+              id="ingresosTotales"
+              name="ingresosTotales"
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="formulario.ingresosTotales"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="costosTotales">Costos totales</label>
+            <input
+              id="costosTotales"
+              name="costosTotales"
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="formulario.costosTotales"
+              required>
+          </div>
+
+        </div>
+
+        <!-- SECCIONES -->
+        <h3 class="form-section-title">Estructura del reporte</h3>
+
+        <div class="form-group">
+          <label for="seccionesTexto">Secciones del reporte</label>
+          <textarea
+            id="seccionesTexto"
+            name="seccionesTexto"
+            rows="5"
+            [(ngModel)]="formulario.seccionesTexto"
+            placeholder="Escribe una sección por línea:
+Resumen ejecutivo
+Ingresos
+Costos
+Análisis financiero
+Conclusiones"></textarea>
+          <small class="field-help">
+            Cada línea se registrará como una sección independiente.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="estado">Estado del reporte</label>
+          <select
+            id="estado"
+            name="estado"
+            [(ngModel)]="formulario.estado">
+            <option value="BORRADOR">Borrador</option>
+            <option value="GENERADO">Generado</option>
+          </select>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarFormulario()">
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="guardando">
+            {{ guardando
+              ? 'Guardando...'
+              : (modoEdicion ? 'Actualizar reporte' : 'Guardar reporte') }}
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </div>
+
+</div>

@@ -1,0 +1,392 @@
+
+<div class="inventarios-container">
+
+  <header class="page-header">
+    <div>
+      <h1>Gestión de inventarios</h1>
+      <p>Control de existencias y movimientos de productos por filial.</p>
+    </div>
+
+    <button class="btn-primary" type="button" (click)="abrirFormulario()">
+      <span>＋</span>
+      Registrar inventario
+    </button>
+  </header>
+
+  <!-- MENSAJES -->
+  <div
+    *ngIf="mensaje"
+    class="alert-message"
+    [class.alert-success]="tipoMensaje === 'exito'"
+    [class.alert-error]="tipoMensaje === 'error'">
+    {{ mensaje }}
+  </div>
+
+  <!-- INDICADORES -->
+  <section class="stats-grid">
+
+    <article class="stat-card">
+      <div class="stat-icon blue">▥</div>
+      <div>
+        <span class="stat-label">Registros de inventario</span>
+        <strong class="stat-value">{{ totalInventarios }}</strong>
+        <small>Productos por filial</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon purple">▣</div>
+      <div>
+        <span class="stat-label">Unidades disponibles</span>
+        <strong class="stat-value">{{ totalStock }}</strong>
+        <small>Total de existencias</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon orange">⚠</div>
+      <div>
+        <span class="stat-label">Stock bajo</span>
+        <strong class="stat-value">{{ inventariosStockBajo }}</strong>
+        <small>Requieren reposición</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon green">✓</div>
+      <div>
+        <span class="stat-label">Stock normal</span>
+        <strong class="stat-value">{{ inventariosStockNormal }}</strong>
+        <small>Existencias suficientes</small>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- TABLA DE INVENTARIOS -->
+  <section class="inventory-panel">
+
+    <div class="panel-header">
+      <div>
+        <h2>Existencias registradas</h2>
+        <p>Consulta y administra el inventario de cada filial.</p>
+      </div>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="listarInventarios()">
+        ↻ Actualizar
+      </button>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-container">
+
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          [(ngModel)]="terminoBusqueda"
+          placeholder="Buscar producto, código o filial...">
+      </div>
+
+      <select [(ngModel)]="filtroFilial">
+        <option value="">Todas las filiales</option>
+        <option *ngFor="let filial of filiales" [value]="filial.id">
+          {{ filial.nombre }}
+        </option>
+      </select>
+
+      <select [(ngModel)]="filtroStock">
+        <option value="todos">Todos los niveles</option>
+        <option value="bajo">Stock bajo</option>
+        <option value="normal">Stock normal</option>
+      </select>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-container">
+
+      <table class="inventory-table">
+
+        <thead>
+          <tr>
+            <th>PRODUCTO</th>
+            <th>FILIAL</th>
+            <th>STOCK DISPONIBLE</th>
+            <th>STOCK MÍNIMO</th>
+            <th>ESTADO</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngIf="cargando">
+            <td colspan="6" class="empty-table">
+              Cargando inventarios...
+            </td>
+          </tr>
+
+          <tr *ngFor="let inventario of inventariosFiltrados">
+
+            <td>
+              <div class="product-information">
+                <strong>{{ inventario.producto?.nombre }}</strong>
+                <small>{{ inventario.producto?.codigo }}</small>
+              </div>
+            </td>
+
+            <td>
+              <div class="branch-information">
+                <strong>{{ inventario.filial?.nombre }}</strong>
+                <small>{{ inventario.filial?.pais }}</small>
+              </div>
+            </td>
+
+            <td>
+              <strong class="stock-number">
+                {{ inventario.cantidadDisponible }}
+              </strong>
+              <small>unidades</small>
+            </td>
+
+            <td>{{ inventario.stockMinimo }}</td>
+
+            <td>
+              <span
+                class="stock-badge"
+                [class.stock-low]="inventario.cantidadDisponible <= inventario.stockMinimo"
+                [class.stock-normal]="inventario.cantidadDisponible > inventario.stockMinimo">
+                {{
+                  inventario.cantidadDisponible <= inventario.stockMinimo
+                    ? 'Stock bajo'
+                    : 'Normal'
+                }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-buttons">
+
+                <button
+                  type="button"
+                  class="action-button entry-button"
+                  title="Registrar entrada"
+                  (click)="abrirMovimiento(inventario, 'entrada')">
+                  ＋ Entrada
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button exit-button"
+                  title="Registrar salida"
+                  (click)="abrirMovimiento(inventario, 'salida')">
+                  − Salida
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="!cargando && inventariosFiltrados.length === 0">
+            <td colspan="6" class="empty-table">
+              <div class="empty-state">
+                <span class="empty-icon">▥</span>
+                <strong>No se encontraron inventarios</strong>
+                <p>Registra un inventario o modifica los filtros de búsqueda.</p>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div class="table-footer">
+      <span>
+        Mostrando {{ inventariosFiltrados.length }} registros
+      </span>
+    </div>
+
+  </section>
+
+  <!-- FORMULARIO: REGISTRAR INVENTARIO -->
+  <div
+    class="modal-overlay"
+    *ngIf="mostrarFormulario"
+    (click)="cerrarFormulario()">
+
+    <section class="modal-container" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <h2>Registrar inventario</h2>
+          <p>Asigna un producto y sus existencias a una filial.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="cerrarFormulario()">
+          ×
+        </button>
+      </div>
+
+      <form (ngSubmit)="registrarInventario()">
+
+        <div class="form-group">
+          <label for="productoId">Producto</label>
+          <select
+            id="productoId"
+            name="productoId"
+            [(ngModel)]="nuevoInventario.productoId"
+            required>
+            <option [ngValue]="0">Selecciona un producto</option>
+            <option *ngFor="let producto of productos" [ngValue]="producto.id">
+              {{ producto.codigo }} - {{ producto.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="filialId">Filial</label>
+          <select
+            id="filialId"
+            name="filialId"
+            [(ngModel)]="nuevoInventario.filialId"
+            required>
+            <option [ngValue]="0">Selecciona una filial</option>
+            <option *ngFor="let filial of filiales" [ngValue]="filial.id">
+              {{ filial.nombre }} - {{ filial.pais }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-row">
+
+          <div class="form-group">
+            <label for="cantidadInicial">Cantidad inicial</label>
+            <input
+              id="cantidadInicial"
+              name="cantidadInicial"
+              type="number"
+              min="0"
+              [(ngModel)]="nuevoInventario.cantidadInicial"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="stockMinimo">Stock mínimo</label>
+            <input
+              id="stockMinimo"
+              name="stockMinimo"
+              type="number"
+              min="0"
+              [(ngModel)]="nuevoInventario.stockMinimo"
+              required>
+          </div>
+
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarFormulario()">
+            Cancelar
+          </button>
+
+          <button type="submit" class="btn-primary">
+            Registrar inventario
+          </button>
+        </div>
+
+      </form>
+
+    </section>
+
+  </div>
+
+  <!-- FORMULARIO: MOVIMIENTO DE INVENTARIO -->
+  <div
+    class="modal-overlay"
+    *ngIf="mostrarFormularioMovimiento"
+    (click)="cerrarFormularioMovimiento()">
+
+    <section class="modal-container movement-modal"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <h2>
+            {{ tipoMovimiento === 'entrada' ? 'Registrar entrada' : 'Registrar salida' }}
+          </h2>
+          <p>Actualiza las existencias del producto seleccionado.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="cerrarFormularioMovimiento()">
+          ×
+        </button>
+      </div>
+
+      <div *ngIf="inventarioSeleccionado" class="selected-product">
+
+        <strong>{{ inventarioSeleccionado.producto?.nombre }}</strong>
+
+        <span>
+          Filial: {{ inventarioSeleccionado.filial?.nombre }}
+        </span>
+
+        <span>
+          Stock actual: {{ inventarioSeleccionado.cantidadDisponible }} unidades
+        </span>
+
+      </div>
+
+      <form (ngSubmit)="registrarMovimiento()">
+
+        <div class="form-group">
+          <label for="cantidadMovimiento">Cantidad de unidades</label>
+          <input
+            id="cantidadMovimiento"
+            name="cantidadMovimiento"
+            type="number"
+            min="1"
+            [(ngModel)]="cantidadMovimiento"
+            required>
+        </div>
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarFormularioMovimiento()">
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primary"
+            [class.btn-danger]="tipoMovimiento === 'salida'">
+            {{ tipoMovimiento === 'entrada' ? 'Registrar entrada' : 'Registrar salida' }}
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </div>
+
+</div>

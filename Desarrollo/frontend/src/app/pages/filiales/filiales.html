@@ -1,0 +1,228 @@
+
+<div class="filiales-container">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <div class="breadcrumb">
+        <span>Inicio</span>
+        <span>/</span>
+        <strong>Filiales</strong>
+      </div>
+      <h1>Gestión de filiales</h1>
+      <p>Administra las sucursales y unidades corporativas de FinanCorp.</p>
+    </div>
+
+    <button class="primary-button" (click)="abrirFormulario()">
+      <span>+</span> Nueva filial
+    </button>
+  </header>
+
+  <!-- MENSAJES -->
+  <div
+    *ngIf="mensaje"
+    class="message"
+    [class.success]="tipoMensaje === 'exito'"
+    [class.error]="tipoMensaje === 'error'">
+    {{ mensaje }}
+  </div>
+
+  <!-- RESUMEN -->
+  <section class="summary-card">
+    <div>
+      <span class="summary-label">Total de filiales registradas</span>
+      <strong>{{ filiales.length }}</strong>
+      <small>Unidades corporativas registradas en SERF</small>
+    </div>
+    <div class="summary-icon">▤</div>
+  </section>
+
+  <!-- LISTADO -->
+  <section class="table-card">
+
+    <div class="table-header">
+      <div>
+        <h2>Listado de filiales</h2>
+        <p>Consulta y administra las filiales de la organización.</p>
+      </div>
+
+      <div class="search-container">
+        <span>⌕</span>
+        <input
+          type="text"
+          [(ngModel)]="terminoBusqueda"
+          placeholder="Buscar filial, país o ciudad...">
+      </div>
+    </div>
+
+    <div class="loading-message" *ngIf="cargando && filiales.length === 0">
+      Cargando información...
+    </div>
+
+    <div class="table-responsive" *ngIf="!cargando || filiales.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>FILIAL</th>
+            <th>PAÍS</th>
+            <th>CIUDAD</th>
+            <th>DIRECCIÓN</th>
+            <th>ESTADO</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let filial of filialesFiltradas">
+            <td>
+              <div class="filial-name">
+                <div class="filial-avatar">
+                  {{ filial.nombre.charAt(0).toUpperCase() }}
+                </div>
+                <strong>{{ filial.nombre }}</strong>
+              </div>
+            </td>
+
+            <td>{{ filial.pais }}</td>
+            <td>{{ filial.ciudad }}</td>
+            <td>{{ filial.direccion }}</td>
+
+            <td>
+              <span
+                class="status-badge"
+                [class.active]="filial.estado"
+                [class.inactive]="!filial.estado">
+                {{ filial.estado ? 'Activa' : 'Inactiva' }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-buttons">
+                <button
+                  class="edit-button"
+                  type="button"
+                  title="Editar filial"
+                  (click)="editarFilial(filial)">
+                  Editar
+                </button>
+
+                <button
+                  class="delete-button"
+                  type="button"
+                  title="Eliminar filial"
+                  (click)="eliminarFilial(filial)">
+                  Eliminar
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="filialesFiltradas.length === 0">
+            <td colspan="6" class="empty-table">
+              <div class="empty-icon">▤</div>
+              <strong>No se encontraron filiales</strong>
+              <p>No hay registros que coincidan con la búsqueda.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer">
+      <span>Registros encontrados: {{ filialesFiltradas.length }}</span>
+    </div>
+
+  </section>
+
+  <!-- FORMULARIO -->
+  <div class="modal-overlay" *ngIf="mostrarFormulario">
+
+    <section class="form-modal">
+
+      <div class="modal-header">
+        <div>
+          <h2>{{ modoEdicion ? 'Editar filial' : 'Registrar nueva filial' }}</h2>
+          <p>Ingresa la información de la unidad corporativa.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="cerrarFormulario()">
+          ×
+        </button>
+      </div>
+
+      <form (ngSubmit)="guardarFilial()" #filialForm="ngForm">
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="nombre">Nombre de la filial *</label>
+            <input
+              id="nombre"
+              name="nombre"
+              type="text"
+              [(ngModel)]="filialSeleccionada.nombre"
+              placeholder="Ej. FinanCorp Perú"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="pais">País *</label>
+            <input
+              id="pais"
+              name="pais"
+              type="text"
+              [(ngModel)]="filialSeleccionada.pais"
+              placeholder="Ej. Perú"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="ciudad">Ciudad *</label>
+            <input
+              id="ciudad"
+              name="ciudad"
+              type="text"
+              [(ngModel)]="filialSeleccionada.ciudad"
+              placeholder="Ej. Lima"
+              required>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="direccion">Dirección *</label>
+            <input
+              id="direccion"
+              name="direccion"
+              type="text"
+              [(ngModel)]="filialSeleccionada.direccion"
+              placeholder="Ingresa la dirección de la filial"
+              required>
+          </div>
+
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="cancel-button"
+            (click)="cerrarFormulario()">
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="primary-button"
+            [disabled]="cargando || !filialForm.valid">
+            {{ cargando ? 'Guardando...' : (modoEdicion ? 'Guardar cambios' : 'Registrar filial') }}
+          </button>
+        </div>
+
+      </form>
+
+    </section>
+
+  </div>
+
+</div>

@@ -1,0 +1,366 @@
+
+<div class="usuarios-container">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <h1>Administración de usuarios</h1>
+      <p>Gestiona las cuentas, roles y accesos al sistema SERF.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="abrirFormulario()">
+      ＋ Nuevo usuario
+    </button>
+  </header>
+
+  <!-- MENSAJES -->
+  <div
+    *ngIf="mensaje"
+    class="alert-message"
+    [class.alert-success]="tipoMensaje === 'exito'"
+    [class.alert-error]="tipoMensaje === 'error'">
+    {{ mensaje }}
+  </div>
+
+  <!-- INDICADORES -->
+  <section class="stats-grid">
+
+    <article class="stat-card">
+      <div class="stat-icon blue">♙</div>
+      <div>
+        <span class="stat-label">Total de usuarios</span>
+        <strong class="stat-value">{{ totalUsuarios }}</strong>
+        <small>Cuentas registradas</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon green">✓</div>
+      <div>
+        <span class="stat-label">Usuarios activos</span>
+        <strong class="stat-value">{{ usuariosActivos }}</strong>
+        <small>Cuentas habilitadas</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon orange">◷</div>
+      <div>
+        <span class="stat-label">Usuarios inactivos</span>
+        <strong class="stat-value">{{ usuariosInactivos }}</strong>
+        <small>Cuentas deshabilitadas</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon purple">♜</div>
+      <div>
+        <span class="stat-label">Administradores</span>
+        <strong class="stat-value">{{ totalAdministradores }}</strong>
+        <small>Cuentas con rol administrador</small>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- PANEL PRINCIPAL -->
+  <section class="users-panel">
+
+    <div class="panel-header">
+      <div>
+        <h2>Listado de usuarios</h2>
+        <p>Consulta y administra las cuentas registradas en SERF.</p>
+      </div>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="listarUsuarios()">
+        ↻ Actualizar
+      </button>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-container">
+
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          [(ngModel)]="terminoBusqueda"
+          placeholder="Buscar por nombre o correo...">
+      </div>
+
+      <select [(ngModel)]="filtroRol">
+        <option value="">Todos los roles</option>
+        <option value="ADMINISTRADOR">Administrador</option>
+        <option value="ENCARGADO_FILIAL">Encargado de filial</option>
+        <option value="GERENCIA_CORPORATIVA">Gerencia corporativa</option>
+        <option value="ANALISTA">Analista financiero</option>
+      </select>
+
+      <select [(ngModel)]="filtroEstado">
+        <option value="">Todos los estados</option>
+        <option value="ACTIVO">Activos</option>
+        <option value="INACTIVO">Inactivos</option>
+      </select>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-container">
+
+      <table class="users-table">
+
+        <thead>
+          <tr>
+            <th>USUARIO</th>
+            <th>CORREO ELECTRÓNICO</th>
+            <th>ROL</th>
+            <th>ESTADO</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngIf="cargando">
+            <td colspan="5" class="empty-table">
+              Cargando usuarios...
+            </td>
+          </tr>
+
+          <tr *ngFor="let usuario of usuariosFiltrados">
+
+            <td>
+              <div class="user-information">
+                <div class="user-avatar">
+                  {{ usuario.nombre.charAt(0).toUpperCase() }}
+                </div>
+
+                <div class="user-details">
+                  <strong>{{ usuario.nombre }}</strong>
+                  <small>ID: {{ usuario.id }}</small>
+                </div>
+              </div>
+            </td>
+
+            <td>{{ usuario.correo }}</td>
+
+            <td>
+              <span class="role-badge">
+                {{ usuario.rol.replace('_', ' ') }}
+              </span>
+            </td>
+
+            <td>
+              <span
+                class="status-badge"
+                [class.status-active]="usuario.estado"
+                [class.status-inactive]="!usuario.estado">
+                {{ usuario.estado ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-buttons">
+
+                <button
+                  type="button"
+                  class="action-button edit-button"
+                  title="Editar usuario"
+                  (click)="editarUsuario(usuario)">
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button toggle-button"
+                  (click)="cambiarEstado(usuario)">
+                  {{ usuario.estado ? 'Desactivar' : 'Activar' }}
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button delete-button"
+                  title="Eliminar usuario"
+                  (click)="eliminarUsuario(usuario)">
+                  Eliminar
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="!cargando && usuariosFiltrados.length === 0">
+            <td colspan="5" class="empty-table">
+              <div class="empty-state">
+                <span class="empty-icon">♙</span>
+                <strong>No se encontraron usuarios</strong>
+                <p>Registra una nueva cuenta o modifica los filtros.</p>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div class="table-footer">
+      Mostrando {{ usuariosFiltrados.length }} usuarios
+    </div>
+
+  </section>
+
+  <!-- INFORMACIÓN DE SEGURIDAD -->
+  <section class="security-information">
+    <div class="security-icon">ⓘ</div>
+    <div>
+      <strong>Seguridad de las cuentas</strong>
+      <p>
+        Las contraseñas no se muestran en el listado de usuarios.
+        El sistema utiliza autenticación mediante JWT y contraseñas
+        protegidas en el backend.
+      </p>
+    </div>
+  </section>
+
+  <!-- MODAL DE REGISTRO Y EDICIÓN -->
+  <div
+    class="modal-overlay"
+    *ngIf="mostrarFormulario"
+    (click)="cerrarFormulario()">
+
+    <section
+      class="modal-container"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <h2>
+            {{ modoEdicion ? 'Editar usuario' : 'Registrar nuevo usuario' }}
+          </h2>
+          <p>Completa la información de la cuenta de acceso.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="cerrarFormulario()">
+          ×
+        </button>
+      </div>
+
+      <form (ngSubmit)="guardarUsuario()">
+
+        <!-- DATOS PERSONALES -->
+        <h3 class="form-section-title">Información del usuario</h3>
+
+        <div class="form-group">
+          <label for="nombre">Nombre completo</label>
+          <input
+            id="nombre"
+            name="nombre"
+            type="text"
+            [(ngModel)]="formulario.nombre"
+            placeholder="Ej. Juan Pérez"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label for="correo">Correo electrónico</label>
+          <input
+            id="correo"
+            name="correo"
+            type="email"
+            [(ngModel)]="formulario.correo"
+            placeholder="usuario@financorp.com"
+            required>
+        </div>
+
+        <!-- CREDENCIALES -->
+        <h3 class="form-section-title">Credenciales de acceso</h3>
+
+        <div class="form-group">
+          <label for="contrasena">
+            {{ modoEdicion ? 'Nueva contraseña (opcional)' : 'Contraseña' }}
+          </label>
+
+          <input
+            id="contrasena"
+            name="contrasena"
+            type="password"
+            [(ngModel)]="formulario.contrasena"
+            [required]="!modoEdicion"
+            [placeholder]="modoEdicion
+              ? 'Dejar vacío para conservar la contraseña actual'
+              : 'Ingresa una contraseña'">
+
+          <small class="field-help" *ngIf="modoEdicion">
+            Si no deseas cambiar la contraseña, deja este campo vacío.
+          </small>
+        </div>
+
+        <!-- PERMISOS -->
+        <h3 class="form-section-title">Asignación de permisos</h3>
+
+        <div class="form-group">
+          <label for="rol">Rol del usuario</label>
+          <select
+            id="rol"
+            name="rol"
+            [(ngModel)]="formulario.rol"
+            required>
+            <option value="ADMINISTRADOR">Administrador</option>
+            <option value="ENCARGADO_FILIAL">Encargado de filial</option>
+            <option value="GERENCIA_CORPORATIVA">Gerencia corporativa</option>
+            <option value="ANALISTA">Analista financiero</option>
+          </select>
+        </div>
+
+        <!-- ESTADO -->
+        <div class="form-group">
+          <label for="estado">Estado de la cuenta</label>
+          <select
+            id="estado"
+            name="estado"
+            [(ngModel)]="formulario.estado">
+            <option [ngValue]="true">Activo</option>
+            <option [ngValue]="false">Inactivo</option>
+          </select>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarFormulario()">
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="guardando">
+            {{ guardando
+              ? 'Guardando...'
+              : (modoEdicion ? 'Actualizar usuario' : 'Registrar usuario') }}
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </div>
+
+</div>

@@ -1,0 +1,90 @@
+
+<div class="login-container">
+
+  <section class="brand-panel">
+    <div class="brand-content">
+      <div class="brand-logo">SERF</div>
+      <h1>Sistema Empresarial de Gestión de Reportes Financieros</h1>
+      <p>
+        Plataforma corporativa para centralizar y gestionar
+        la información financiera de las filiales de FinanCorp.
+      </p>
+
+      <div class="brand-footer">
+        FINANCORP S.A. | Gestión financiera corporativa
+      </div>
+    </div>
+  </section>
+
+  <section class="form-panel">
+    <div class="login-card">
+
+      <div class="welcome">
+        <span class="subtitle">PLATAFORMA CORPORATIVA</span>
+        <h2>Bienvenido a SERF</h2>
+        <p>Ingresa tus credenciales para acceder al sistema.</p>
+      </div>
+
+      <form (ngSubmit)="iniciarSesion()" #loginForm="ngForm">
+
+        <div class="form-group">
+          <label for="correo">Correo electrónico</label>
+          <input
+            id="correo"
+            type="email"
+            name="correo"
+            [(ngModel)]="correo"
+            placeholder="usuario@financorp.com"
+            autocomplete="username"
+            required
+            email
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="contrasena">Contraseña</label>
+
+          <div class="password-container">
+            <input
+              id="contrasena"
+              [type]="mostrarContrasena ? 'text' : 'password'"
+              name="contrasena"
+              [(ngModel)]="contrasena"
+              placeholder="Ingresa tu contraseña"
+              autocomplete="current-password"
+              required
+            />
+
+            <button
+              type="button"
+              class="show-password"
+              (click)="mostrarContrasena = !mostrarContrasena"
+            >
+              {{ mostrarContrasena ? 'Ocultar' : 'Mostrar' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="error-message" *ngIf="mensajeError">
+          {{ mensajeError }}
+        </div>
+
+        <button
+          type="submit"
+          class="login-button"
+          [disabled]="cargando || !loginForm.valid"
+        >
+          {{ cargando ? 'Ingresando...' : 'Iniciar sesión' }}
+        </button>
+
+      </form>
+
+      <div class="login-footer">
+        <p>Acceso exclusivo para usuarios autorizados.</p>
+        <span>© 2026 FinanCorp S.A.</span>
+      </div>
+
+    </div>
+  </section>
+
+</div>

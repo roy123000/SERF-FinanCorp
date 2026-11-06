@@ -1,0 +1,132 @@
+
+<div class="configuracion-container">
+
+  <div class="page-header">
+    <div>
+      <h1>Configuración del sistema</h1>
+      <p>Administra los parámetros generales de SERF - FinanCorp.</p>
+    </div>
+  </div>
+
+  <div class="configuracion-card">
+
+    <div class="card-header">
+      <div class="header-icon">⚙️</div>
+      <div>
+        <h2>Parámetros generales</h2>
+        <p>Define las preferencias que utilizará el sistema.</p>
+      </div>
+    </div>
+
+    <div *ngIf="cargando" class="loading-message">
+      Cargando configuración...
+    </div>
+
+    <form
+      *ngIf="!cargando"
+      (ngSubmit)="guardarConfiguracion()"
+      #configForm="ngForm">
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="monedaBase">Moneda base</label>
+          <select
+            id="monedaBase"
+            name="monedaBase"
+            [(ngModel)]="configuracion.monedaBase"
+            required>
+            <option value="PEN">Sol peruano (PEN)</option>
+            <option value="EUR">Euro (EUR)</option>
+            <option value="USD">Dólar estadounidense (USD)</option>
+            <option value="MXN">Peso mexicano (MXN)</option>
+            <option value="COP">Peso colombiano (COP)</option>
+            <option value="CLP">Peso chileno (CLP)</option>
+            <option value="ARS">Peso argentino (ARS)</option>
+          </select>
+          <small>Moneda principal para los reportes financieros.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="idioma">Idioma del sistema</label>
+          <select
+            id="idioma"
+            name="idioma"
+            [(ngModel)]="configuracion.idioma"
+            required>
+            <option value="Español">Español</option>
+            <option value="Inglés">Inglés</option>
+          </select>
+          <small>Idioma utilizado en la información del sistema.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="formatoFecha">Formato de fecha</label>
+          <select
+            id="formatoFecha"
+            name="formatoFecha"
+            [(ngModel)]="configuracion.formatoFecha"
+            required>
+            <option value="dd/MM/yyyy">DD/MM/AAAA</option>
+            <option value="MM/dd/yyyy">MM/DD/AAAA</option>
+            <option value="yyyy-MM-dd">AAAA-MM-DD</option>
+          </select>
+          <small>Formato de visualización de las fechas.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="tasaImpuesto">Tasa de impuesto (%)</label>
+          <input
+            type="number"
+            id="tasaImpuesto"
+            name="tasaImpuesto"
+            [(ngModel)]="configuracion.tasaImpuesto"
+            min="0"
+            max="100"
+            step="0.01"
+            required>
+          <small>Porcentaje de impuesto aplicado a las operaciones.</small>
+        </div>
+
+      </div>
+
+      <div class="configuration-info">
+        <span class="info-icon">ⓘ</span>
+        <div>
+          <strong>Configuración centralizada</strong>
+          <p>
+            Estos parámetros representan los valores generales
+            administrados mediante el patrón Singleton.
+          </p>
+        </div>
+      </div>
+
+      <div
+        *ngIf="mensaje"
+        class="message"
+        [ngClass]="tipoMensaje">
+        {{ mensaje }}
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="restablecerConfiguracion()"
+          [disabled]="guardando">
+          Restablecer
+        </button>
+
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="guardando || configForm.invalid">
+          {{ guardando ? 'Guardando...' : 'Guardar configuración' }}
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+</div>

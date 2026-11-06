@@ -1,0 +1,463 @@
+
+<div class="ventas-container">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <h1>Gestión de ventas</h1>
+      <p>Registro y control de operaciones comerciales de las filiales.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="abrirFormulario()">
+      <span>＋</span>
+      Registrar venta
+    </button>
+  </header>
+
+  <!-- MENSAJES -->
+  <div
+    *ngIf="mensaje"
+    class="alert-message"
+    [class.alert-success]="tipoMensaje === 'exito'"
+    [class.alert-error]="tipoMensaje === 'error'">
+    {{ mensaje }}
+  </div>
+
+  <!-- INDICADORES -->
+  <section class="stats-grid">
+
+    <article class="stat-card">
+      <div class="stat-icon blue">▧</div>
+      <div>
+        <span class="stat-label">Ventas registradas</span>
+        <strong class="stat-value">{{ totalVentas }}</strong>
+        <small>Operaciones almacenadas</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon green">✓</div>
+      <div>
+        <span class="stat-label">Ventas activas</span>
+        <strong class="stat-value">{{ ventasRegistradas }}</strong>
+        <small>Operaciones vigentes</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon orange">↶</div>
+      <div>
+        <span class="stat-label">Ventas anuladas</span>
+        <strong class="stat-value">{{ ventasAnuladas }}</strong>
+        <small>Operaciones canceladas</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon purple">S/</div>
+      <div>
+        <span class="stat-label">Importe de ventas</span>
+        <strong class="stat-value amount-value">
+          {{ importeVentasRegistradas | number:'1.2-2' }}
+        </strong>
+        <small>Ventas vigentes</small>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- PANEL DE VENTAS -->
+  <section class="sales-panel">
+
+    <div class="panel-header">
+      <div>
+        <h2>Registro de operaciones</h2>
+        <p>Consulta y administra las ventas realizadas por filial.</p>
+      </div>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="listarVentas()">
+        ↻ Actualizar
+      </button>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-container">
+
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          [(ngModel)]="terminoBusqueda"
+          placeholder="Buscar por número de venta o filial...">
+      </div>
+
+      <select [(ngModel)]="filtroFilial">
+        <option value="">Todas las filiales</option>
+        <option *ngFor="let filial of filiales" [value]="filial.id">
+          {{ filial.nombre }}
+        </option>
+      </select>
+
+      <select [(ngModel)]="filtroEstado">
+        <option value="todos">Todos los estados</option>
+        <option value="REGISTRADA">Registradas</option>
+        <option value="ANULADA">Anuladas</option>
+      </select>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-container">
+
+      <table class="sales-table">
+
+        <thead>
+          <tr>
+            <th>N.º DE VENTA</th>
+            <th>FILIAL</th>
+            <th>PRODUCTOS</th>
+            <th>SUBTOTAL</th>
+            <th>IMPUESTO</th>
+            <th>TOTAL</th>
+            <th>ESTADO</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngIf="cargando">
+            <td colspan="8" class="empty-table">
+              Cargando ventas...
+            </td>
+          </tr>
+
+          <tr *ngFor="let venta of ventasFiltradas">
+
+            <td>
+              <strong class="sale-number">
+                {{ venta.numeroVenta }}
+              </strong>
+            </td>
+
+            <td>
+              <div class="branch-information">
+                <strong>{{ venta.filial.nombre }}</strong>
+                <small>{{ venta.filial.pais }}</small>
+              </div>
+            </td>
+
+            <td>
+              {{ venta.detalles.length || 0 }} productos
+            </td>
+
+            <td>
+              {{ venta.moneda || 'PEN' }}
+              {{ venta.subtotal | number:'1.2-2' }}
+            </td>
+
+            <td>
+              {{ venta.moneda || 'PEN' }}
+              {{ venta.impuesto | number:'1.2-2' }}
+            </td>
+
+            <td>
+              <strong class="total-value">
+                {{ venta.moneda || 'PEN' }}
+                {{ venta.total | number:'1.2-2' }}
+              </strong>
+            </td>
+
+            <td>
+              <span
+                class="status-badge"
+                [class.status-active]="venta.estado === 'REGISTRADA'"
+                [class.status-cancelled]="venta.estado === 'ANULADA'">
+                {{ venta.estado }}
+              </span>
+            </td>
+
+            <td>
+              <button
+                *ngIf="venta.estado !== 'ANULADA'"
+                type="button"
+                class="action-button cancel-button"
+                (click)="anularVenta(venta)">
+                Anular
+              </button>
+
+              <span
+                *ngIf="venta.estado === 'ANULADA'"
+                class="cancelled-label">
+                Sin acciones
+              </span>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="!cargando && ventasFiltradas.length === 0">
+            <td colspan="8" class="empty-table">
+              <div class="empty-state">
+                <span class="empty-icon">▧</span>
+                <strong>No se encontraron ventas</strong>
+                <p>Registra una venta o modifica los filtros de búsqueda.</p>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div class="table-footer">
+      Mostrando {{ ventasFiltradas.length }} operaciones
+    </div>
+
+  </section>
+
+  <!-- MODAL DE REGISTRO DE VENTA -->
+  <div
+    class="modal-overlay"
+    *ngIf="mostrarFormulario"
+    (click)="cerrarFormulario()">
+
+    <section
+      class="modal-container"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <h2>Registrar nueva venta</h2>
+          <p>Completa los datos de la operación comercial.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="cerrarFormulario()">
+          ×
+        </button>
+      </div>
+
+      <form (ngSubmit)="registrarVenta()">
+
+        <!-- DATOS GENERALES -->
+        <h3 class="form-section-title">Datos generales</h3>
+
+        <div class="form-row">
+
+          <div class="form-group">
+            <label for="numeroVenta">Número de venta</label>
+            <input
+              id="numeroVenta"
+              name="numeroVenta"
+              type="text"
+              [(ngModel)]="numeroVenta"
+              readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="filialVenta">Filial</label>
+            <select
+              id="filialVenta"
+              name="filialId"
+              [(ngModel)]="filialId"
+              required>
+              <option [ngValue]="0">Selecciona una filial</option>
+              <option
+                *ngFor="let filial of filiales"
+                [ngValue]="filial.id">
+                {{ filial.nombre }} - {{ filial.pais }}
+              </option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="form-row">
+
+          <div class="form-group">
+            <label for="moneda">Moneda</label>
+            <select
+              id="moneda"
+              name="moneda"
+              [(ngModel)]="moneda">
+              <option value="PEN">Sol peruano (PEN)</option>
+              <option value="USD">Dólar estadounidense (USD)</option>
+              <option value="EUR">Euro (EUR)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="tasaImpuesto">Impuesto (%)</label>
+            <input
+              id="tasaImpuesto"
+              name="tasaImpuesto"
+              type="number"
+              min="0"
+              max="100"
+              [(ngModel)]="tasaImpuesto"
+              required>
+          </div>
+
+        </div>
+
+        <!-- DETALLE DE PRODUCTOS -->
+        <div class="details-heading">
+          <div>
+            <h3 class="form-section-title">Productos de la venta</h3>
+            <p>Agrega los productos y sus cantidades.</p>
+          </div>
+
+          <button
+            type="button"
+            class="btn-add-detail"
+            (click)="agregarDetalle()">
+            ＋ Agregar producto
+          </button>
+        </div>
+
+        <div
+          class="detail-card"
+          *ngFor="let detalle of detallesFormulario; let i = index">
+
+          <div class="detail-card-header">
+            <strong>Producto {{ i + 1 }}</strong>
+
+            <button
+              type="button"
+              class="remove-detail"
+              [disabled]="detallesFormulario.length === 1"
+              (click)="eliminarDetalle(i)">
+              Eliminar
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label [for]="'producto-' + i">Producto</label>
+
+            <select
+              [id]="'producto-' + i"
+              [name]="'productoId-' + i"
+              [(ngModel)]="detalle.productoId"
+              required>
+
+              <option [ngValue]="0">Selecciona un producto</option>
+
+              <option
+                *ngFor="let producto of productos"
+                [ngValue]="producto.id">
+                {{ producto.codigo }} - {{ producto.nombre }}
+              </option>
+
+            </select>
+          </div>
+
+          <div class="form-row">
+
+            <div class="form-group">
+              <label [for]="'cantidad-' + i">Cantidad</label>
+              <input
+                [id]="'cantidad-' + i"
+                [name]="'cantidad-' + i"
+                type="number"
+                min="1"
+                [(ngModel)]="detalle.cantidad"
+                required>
+            </div>
+
+            <div class="form-group">
+              <label [for]="'precio-' + i">Precio unitario</label>
+              <input
+                [id]="'precio-' + i"
+                type="text"
+                [value]="obtenerPrecio(detalle.productoId) | number:'1.2-2'"
+                readonly>
+            </div>
+
+          </div>
+
+          <div class="form-row">
+
+            <div class="form-group">
+              <label [for]="'descuento-' + i">Descuento (importe)</label>
+              <input
+                [id]="'descuento-' + i"
+                [name]="'descuento-' + i"
+                type="number"
+                min="0"
+                [(ngModel)]="detalle.descuento">
+            </div>
+
+            <div class="form-group">
+              <label>Subtotal del producto</label>
+              <input
+                type="text"
+                [value]="calcularSubtotalDetalle(detalle) | number:'1.2-2'"
+                readonly>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- RESUMEN -->
+        <section class="sale-summary">
+
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <strong>
+              {{ moneda }} {{ subtotalVenta | number:'1.2-2' }}
+            </strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Impuesto ({{ tasaImpuesto }} %)</span>
+            <strong>
+              {{ moneda }} {{ impuestoVenta | number:'1.2-2' }}
+            </strong>
+          </div>
+
+          <div class="summary-row summary-total">
+            <span>Total de venta</span>
+            <strong>
+              {{ moneda }} {{ totalVenta | number:'1.2-2' }}
+            </strong>
+          </div>
+
+        </section>
+
+        <!-- ACCIONES -->
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarFormulario()">
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="guardando">
+            {{ guardando ? 'Registrando...' : 'Guardar venta' }}
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </div>
+
+</div>

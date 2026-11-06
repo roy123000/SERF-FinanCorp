@@ -1,0 +1,423 @@
+
+<div class="plantillas-container">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <h1>Plantillas de reportes</h1>
+      <p>Administra estructuras reutilizables para los informes financieros corporativos.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="abrirFormulario()">
+      ＋ Nueva plantilla
+    </button>
+  </header>
+
+  <!-- MENSAJES -->
+  <div
+    *ngIf="mensaje"
+    class="alert-message"
+    [class.alert-success]="tipoMensaje === 'exito'"
+    [class.alert-error]="tipoMensaje === 'error'">
+    {{ mensaje }}
+  </div>
+
+  <!-- INDICADORES -->
+  <section class="stats-grid">
+
+    <article class="stat-card">
+      <div class="stat-icon blue">▩</div>
+      <div>
+        <span class="stat-label">Total de plantillas</span>
+        <strong class="stat-value">{{ totalPlantillas }}</strong>
+        <small>Plantillas registradas</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon green">✓</div>
+      <div>
+        <span class="stat-label">Plantillas activas</span>
+        <strong class="stat-value">{{ plantillasActivas }}</strong>
+        <small>Disponibles para utilizar</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon orange">◷</div>
+      <div>
+        <span class="stat-label">Plantillas inactivas</span>
+        <strong class="stat-value">{{ plantillasInactivas }}</strong>
+        <small>Deshabilitadas</small>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon purple">◎</div>
+      <div>
+        <span class="stat-label">Países registrados</span>
+        <strong class="stat-value">{{ paisesRegistrados }}</strong>
+        <small>Países con plantillas</small>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- PANEL PRINCIPAL -->
+  <section class="templates-panel">
+
+    <div class="panel-header">
+      <div>
+        <h2>Listado de plantillas</h2>
+        <p>Consulta, organiza y administra las estructuras de los reportes.</p>
+      </div>
+
+      <div class="panel-actions">
+
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="listarPlantillas()">
+          Todas
+        </button>
+
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="listarActivas()">
+          Solo activas
+        </button>
+
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-container">
+
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          [(ngModel)]="terminoBusqueda"
+          placeholder="Buscar por nombre, descripción o país...">
+      </div>
+
+      <select [(ngModel)]="filtroPais">
+        <option value="">Todos los países</option>
+        <option
+          *ngFor="let pais of paisesDisponibles"
+          [value]="pais">
+          {{ pais }}
+        </option>
+      </select>
+
+      <select [(ngModel)]="filtroTipo">
+        <option value="">Todos los tipos</option>
+        <option value="FINANCIERO">Financiero</option>
+        <option value="CONSOLIDADO">Consolidado</option>
+        <option value="VENTAS">Ventas</option>
+        <option value="INVENTARIO">Inventario</option>
+      </select>
+
+      <select [(ngModel)]="filtroEstado">
+        <option value="">Todos los estados</option>
+        <option value="ACTIVA">Activas</option>
+        <option value="INACTIVA">Inactivas</option>
+      </select>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-container">
+
+      <table class="templates-table">
+
+        <thead>
+          <tr>
+            <th>PLANTILLA</th>
+            <th>PAÍS</th>
+            <th>TIPO DE REPORTE</th>
+            <th>SECCIONES</th>
+            <th>VERSIÓN</th>
+            <th>FECHA DE CREACIÓN</th>
+            <th>ESTADO</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngIf="cargando">
+            <td colspan="8" class="empty-table">
+              Cargando plantillas...
+            </td>
+          </tr>
+
+          <tr *ngFor="let plantilla of plantillasFiltradas">
+
+            <td>
+              <div class="template-information">
+                <strong>{{ plantilla.nombre }}</strong>
+                <small>{{ plantilla.descripcion || 'Sin descripción' }}</small>
+              </div>
+            </td>
+
+            <td>{{ plantilla.pais }}</td>
+
+            <td>
+              <span class="type-label">
+                {{ plantilla.tipoReporte }}
+              </span>
+            </td>
+
+            <td>
+              <span class="sections-count">
+                {{ plantilla.secciones.length }} secciones
+              </span>
+            </td>
+
+            <td>
+              <span class="version-label">
+                v{{ plantilla.version }}
+              </span>
+            </td>
+
+            <td>
+              {{ plantilla.fechaCreacion
+                ? (plantilla.fechaCreacion | date:'dd/MM/yyyy')
+                : 'No disponible' }}
+            </td>
+
+            <td>
+              <span
+                class="status-badge"
+                [class.status-active]="plantilla.estado"
+                [class.status-inactive]="!plantilla.estado">
+                {{ plantilla.estado ? 'ACTIVA' : 'INACTIVA' }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-buttons">
+
+                <button
+                  type="button"
+                  class="action-button edit-button"
+                  title="Editar plantilla"
+                  (click)="editarPlantilla(plantilla)">
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button clone-button"
+                  title="Clonar plantilla"
+                  (click)="clonarPlantilla(plantilla)">
+                  Clonar
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button toggle-button"
+                  (click)="cambiarEstado(plantilla)">
+                  {{ plantilla.estado ? 'Desactivar' : 'Activar' }}
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button delete-button"
+                  title="Eliminar plantilla"
+                  (click)="eliminarPlantilla(plantilla)">
+                  Eliminar
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="!cargando && plantillasFiltradas.length === 0">
+            <td colspan="8" class="empty-table">
+              <div class="empty-state">
+                <span class="empty-icon">▩</span>
+                <strong>No se encontraron plantillas</strong>
+                <p>Registra una nueva plantilla o modifica los filtros.</p>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div class="table-footer">
+      Mostrando {{ plantillasFiltradas.length }} plantillas
+    </div>
+
+  </section>
+
+  <!-- DETALLE DE SECCIONES -->
+  <section class="sections-information">
+    <div class="information-icon">ⓘ</div>
+    <div>
+      <strong>Estructura reutilizable</strong>
+      <p>
+        Las plantillas permiten definir secciones que pueden utilizarse
+        como base para elaborar diferentes reportes financieros.
+        También puedes clonar una plantilla para crear una nueva versión
+        sin modificar directamente la estructura original.
+      </p>
+    </div>
+  </section>
+
+  <!-- MODAL DE REGISTRO Y EDICIÓN -->
+  <div
+    class="modal-overlay"
+    *ngIf="mostrarFormulario"
+    (click)="cerrarFormulario()">
+
+    <section
+      class="modal-container"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <h2>
+            {{ modoEdicion ? 'Editar plantilla' : 'Registrar nueva plantilla' }}
+          </h2>
+          <p>Define la información y estructura del reporte reutilizable.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="cerrarFormulario()">
+          ×
+        </button>
+      </div>
+
+      <form (ngSubmit)="guardarPlantilla()">
+
+        <!-- INFORMACIÓN GENERAL -->
+        <h3 class="form-section-title">Información general</h3>
+
+        <div class="form-group">
+          <label for="nombre">Nombre de la plantilla</label>
+          <input
+            id="nombre"
+            name="nombre"
+            type="text"
+            [(ngModel)]="formulario.nombre"
+            placeholder="Ej. Plantilla financiera corporativa"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label for="descripcion">Descripción</label>
+          <textarea
+            id="descripcion"
+            name="descripcion"
+            rows="3"
+            [(ngModel)]="formulario.descripcion"
+            placeholder="Describe el propósito de esta plantilla...">
+          </textarea>
+        </div>
+
+        <div class="form-row">
+
+          <div class="form-group">
+            <label for="pais">País</label>
+            <input
+              id="pais"
+              name="pais"
+              type="text"
+              [(ngModel)]="formulario.pais"
+              placeholder="Ej. Perú"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoReporte">Tipo de reporte</label>
+            <select
+              id="tipoReporte"
+              name="tipoReporte"
+              [(ngModel)]="formulario.tipoReporte"
+              required>
+              <option value="FINANCIERO">Financiero</option>
+              <option value="CONSOLIDADO">Consolidado</option>
+              <option value="VENTAS">Ventas</option>
+              <option value="INVENTARIO">Inventario</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- ESTRUCTURA -->
+        <h3 class="form-section-title">Estructura de la plantilla</h3>
+
+        <div class="form-group">
+          <label for="seccionesTexto">Secciones del reporte</label>
+          <textarea
+            id="seccionesTexto"
+            name="seccionesTexto"
+            rows="7"
+            [(ngModel)]="formulario.seccionesTexto"
+            placeholder="Escribe una sección por línea:
+Resumen ejecutivo
+Ingresos
+Costos
+Análisis financiero
+Conclusiones"></textarea>
+
+          <small class="field-help">
+            Cada línea representa una sección independiente de la plantilla.
+          </small>
+        </div>
+
+        <!-- ESTADO -->
+        <h3 class="form-section-title">Configuración</h3>
+
+        <div class="form-group">
+          <label for="estado">Estado de la plantilla</label>
+          <select
+            id="estado"
+            name="estado"
+            [(ngModel)]="formulario.estado">
+            <option [ngValue]="true">Activa</option>
+            <option [ngValue]="false">Inactiva</option>
+          </select>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarFormulario()">
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="guardando">
+            {{ guardando
+              ? 'Guardando...'
+              : (modoEdicion ? 'Actualizar plantilla' : 'Guardar plantilla') }}
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </div>
+
+</div>
